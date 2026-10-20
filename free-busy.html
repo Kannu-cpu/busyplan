@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Are you free?</title>
+<style>
+:root{--bg:#eef1f4;--fg:#14181d;--mut:#66707b;--free:#1f9d63;--busy:#d6453d}
+@media(prefers-color-scheme:dark){:root{--bg:#14181d;--fg:#eef1f4;--mut:#98a2ad}}
+*{box-sizing:border-box;margin:0}
+html,body{height:100%}
+body{background:var(--bg);color:var(--fg);font:16px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif;display:flex;justify-content:center;padding:env(safe-area-inset-top) 20px env(safe-area-inset-bottom)}
+main{width:100%;max-width:420px;display:flex;flex-direction:column;justify-content:center;gap:16px;padding:28px 0}
+h1{font-size:32px;letter-spacing:-.02em}
+p{color:var(--mut)}
+button{font:inherit;font-size:20px;font-weight:650;color:#fff;border:0;border-radius:18px;padding:22px;width:100%;cursor:pointer;transition:transform .12s,opacity .2s}
+button:active{transform:scale(.97)}
+button:focus-visible{outline:3px solid var(--fg);outline-offset:3px}
+button:disabled{opacity:.5;cursor:default}
+#y{background:var(--free)}#n{background:var(--busy)}
+#msg{min-height:1.5em;text-align:center;font-weight:600;color:var(--fg)}
+</style>
+</head>
+<body>
+<main>
+  <h1>Are you free?</h1>
+  <p>Tap one. I’ll get a notification right away.</p>
+  <button id="y">🟢 YES — I’m free</button>
+  <button id="n">🔴 NO — I’m busy</button>
+  <div id="msg" role="status" aria-live="polite"></div>
+</main>
+<script>
+// Change this to your own random topic, and subscribe to the same topic in the ntfy app.
+var TOPIC = "fb-7k3q9xw2mz4p8vh1";
+
+var msg = document.getElementById("msg");
+var btns = [document.getElementById("y"), document.getElementById("n")];
+
+function send(free) {
+  btns.forEach(function (b) { b.disabled = true; });
+  msg.textContent = "Sending…";
+  fetch("https://ntfy.sh/", {
+    method: "POST",
+    body: JSON.stringify({
+      topic: TOPIC,
+      title: free ? "They're free!" : "They're busy right now.",
+      message: free ? "🟢 Free" : "🔴 Busy",
+      tags: [free ? "green_circle" : "red_circle"],
+      priority: 4
+    })
+  }).then(function (r) {
+    if (!r.ok) throw new Error();
+    msg.textContent = free ? "Sent: you’re free ✓" : "Sent: you’re busy ✓";
+  }).catch(function () {
+    msg.textContent = "Couldn’t send. Check your connection and try again.";
+  }).then(function () {
+    setTimeout(function () { btns.forEach(function (b) { b.disabled = false; }); }, 3000);
+  });
+}
+
+btns[0].onclick = function () { send(true); };
+btns[1].onclick = function () { send(false); };
+</script>
+</body>
+</html>
